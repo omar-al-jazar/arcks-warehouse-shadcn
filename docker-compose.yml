@@ -1,0 +1,31 @@
+# Standalone compose file for this app only — it joins the existing
+# gearroom Supabase stack's network rather than running its own, so both
+# apps share the same live backend. Deploy alongside ~/gearroom without
+# touching that stack:
+#   docker compose -f docker-compose.yml up -d --build
+services:
+  app:
+    container_name: arcks-warehouse-shadcn
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    networks:
+      - gearroom_default
+    environment:
+      # Browser-facing URL (used by client-side code).
+      NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_PUBLIC_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${ANON_KEY}
+      # Internal Docker network address (used by server-side code running
+      # inside this container — reaches the gearroom stack's Kong gateway).
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      EXA_API_KEY: ${EXA_API_KEY}
+
+networks:
+  gearroom_default:
+    external: true
