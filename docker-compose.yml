@@ -9,15 +9,18 @@ services:
     build:
       context: .
       target: runner
+      # NEXT_PUBLIC_* vars are baked into the client bundle at build time —
+      # passing them only under `environment:` below has no effect on
+      # browser-side code (see the Dockerfile comment). Must be build args.
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_PUBLIC_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${ANON_KEY}
     restart: unless-stopped
     ports:
       - "3001:3000"
     networks:
       - gearroom_default
     environment:
-      # Browser-facing URL (used by client-side code).
-      NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_PUBLIC_URL}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${ANON_KEY}
       # Internal Docker network address (used by server-side code running
       # inside this container — reaches the gearroom stack's Kong gateway).
       SUPABASE_URL: http://kong:8000

@@ -10,10 +10,16 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-# Dummy values so the build step doesn't fail; real values are supplied at
-# runtime via docker-compose (see the `app` service).
-ENV NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
-ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=build-time-placeholder
+# NEXT_PUBLIC_* vars are inlined into the client JS bundle at `next build`
+# time — setting them only in docker-compose's runtime `environment:` block
+# (as this project briefly did) never reaches the browser, only server-side
+# code. These must come in as build args instead, from the `build.args` in
+# docker-compose.yml. Defaults here just keep a plain `docker build` (no
+# args) from failing.
+ARG NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=build-time-placeholder
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 RUN npm run build
 
 FROM base AS runner
